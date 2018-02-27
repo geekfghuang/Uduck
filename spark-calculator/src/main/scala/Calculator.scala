@@ -16,8 +16,23 @@ object Calculator {
     val topicsMap = topics.split(",").map((_, numThreads.toInt)).toMap
     val messages = KafkaUtils.createStream(ssc, zk, groupId, topicsMap)
 
-    messages.map(_._2).count().print()
-    messages.map(_._2).print()
+    // 获得日志数据
+    val logs = messages.map(_._2)
+    // 取出ip
+    val ips = logs.map(line => {
+      line.split("\t")(1)
+    })
+    // 统计城市活跃度与城市地理位置
+    ips.foreachRDD(rdd => {
+      rdd.foreachPartition(partitionRecords => {
+        val transport = DataHandler.getTransport()
+        val client = DataHandler.getClient(transport)
+        partitionRecords.foreach(ip => {
+          client.citySortAndLoca(ip)
+        })
+        DataHandler.destoryTransport(transport)
+      })
+    })
 
     ssc.start()
     ssc.awaitTermination()
