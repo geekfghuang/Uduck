@@ -7,11 +7,13 @@ import (
 	"github.com/garyburd/redigo/redis"
 	"time"
 	"encoding/json"
+	"strconv"
 )
 
 const (
 	HttpAddr = ":6988"
-	CITYSORT = "/citysort"
+	CitySort = "/citysort"
+	CityLoca = "/cityloca"
 )
 
 var Pool *redis.Pool
@@ -19,6 +21,13 @@ var Pool *redis.Pool
 type City struct {
 	Value string `json:"value"`
 	Content string `json:"content"`
+}
+
+type MapCity struct {
+	Lat float64 `json:"lat"`
+	Lng float64 `json:"lng"`
+	Value int `json:"value"`
+	Type int `json:"type"`
 }
 
 func init() {
@@ -50,8 +59,10 @@ func newPool(server string) *redis.Pool {
 func serveHTTP(w http.ResponseWriter, r *http.Request) {
 	var resp interface{}
 	switch r.RequestURI {
-	case CITYSORT:
+	case CitySort:
 		resp = citysortInfo()
+	case CityLoca:
+		resp = citylocaInfo()
 	}
 	returnJsonObj(resp, w)
 }
@@ -83,8 +94,34 @@ func citysortInfo() interface{} {
 	return citys
 }
 
+func citylocaInfo() interface{} {
+	conn := Pool.Get()
+	defer conn.Close()
+
+	resp, err := conn.Do("ZREVRANGE", "UduckIp", 0, -1)
+	if err != nil {
+		fmt.Printf("error: %v\n", err)
+	}
+	infos := resp.([]interface{})
+	mapCitys := make([]*MapCity, 0, 10)
+	for i := 0; i < len(infos); i++ {
+		city := string(infos[i].([]byte))
+		resp, err = conn.Do("GEOPOS", "UduckPoint", city)
+		if err != nil {
+			fmt.Printf("error: %v\n", err)
+		}
+		loca := resp.([]interface{})
+		lat, _ := strconv.ParseFloat(string(loca[0].([]interface{})[1].([]byte)), 64)
+		lng, _ := strconv.ParseFloat(string(loca[0].([]interface{})[0].([]byte)), 64)
+		mapCity := &MapCity{Lat:lat, Lng:lng, Value:1, Type:1}
+		mapCitys = append(mapCitys, mapCity)
+	}
+	return mapCitys
+}
+
 func main() {
-	http.HandleFunc(CITYSORT, serveHTTP)
+	http.HandleFunc(CitySort, serveHTTP)
+	http.HandleFunc(CityLoca, serveHTTP)
 	err := http.ListenAndServe(HttpAddr, nil)
 	if err != nil {
 		fmt.Printf("error: %v\n", err)
