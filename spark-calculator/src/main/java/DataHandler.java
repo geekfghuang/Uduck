@@ -39,6 +39,14 @@ public class DataHandler {
         }
     }
 
+    public static void userSex(UduckSrv.Client client, String userId) {
+        try {
+            client.userSex(userId);
+        } catch (TException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void destoryTransport(TTransport transport) {
         transport.close();
     }

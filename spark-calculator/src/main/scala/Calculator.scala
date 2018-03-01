@@ -51,6 +51,21 @@ object Calculator {
       })
     })
 
+    // 统计男女比例
+    val userIds = logs.map(line => {
+      line.split("\t")(0)
+    })
+    userIds.foreachRDD(rdd => {
+      rdd.foreachPartition(partitionRecords => {
+        val transport = DataHandler.getTransport()
+        val client = DataHandler.getClient(transport)
+        partitionRecords.foreach(userId => {
+          DataHandler.userSex(client, userId)
+        })
+        DataHandler.destoryTransport(transport)
+      })
+    })
+
     ssc.start()
     ssc.awaitTermination()
   }
