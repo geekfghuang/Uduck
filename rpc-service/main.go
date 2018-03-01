@@ -91,6 +91,20 @@ func (this *UduckSrvImpl) PayGoods(ctx context.Context, goodsId string) (err err
 	return nil
 }
 
+func (this *UduckSrvImpl) UserSex(ctx context.Context, userId string) (err error) {
+	conn := Pool.Get()
+	defer conn.Close()
+
+	resp, _ := conn.Do("GET", "UduckUS" + userId)
+	sex := string(resp.([]byte))
+	if sex == "男" {
+		conn.Do("INCR", "UduckMan")
+	} else {
+		conn.Do("INCR", "UduckWoman")
+	}
+	return nil
+}
+
 func parseIP(ip string) (city, lng, lat string) {
 	resp, err := http.Get(MapApi + ip)
 	parseIPCheckErr(err)
