@@ -3,17 +3,18 @@ package main
 import (
 	"net/http"
 	"fmt"
-	"os"
 	"github.com/garyburd/redigo/redis"
 	"time"
 	"encoding/json"
 	"strconv"
+	"os"
 )
 
 const (
 	HttpAddr = ":6988"
 	CitySort = "/citysort"
 	CityLoca = "/cityloca"
+	TransactionAmount = "/transactionamount"
 )
 
 var Pool *redis.Pool
@@ -28,6 +29,11 @@ type MapCity struct {
 	Lng float64 `json:"lng"`
 	Value int `json:"value"`
 	Type int `json:"type"`
+}
+
+type TA struct {
+	Name string `json:"name"`
+	Value int64 `json:"value"`
 }
 
 func init() {
@@ -63,6 +69,8 @@ func serveHTTP(w http.ResponseWriter, r *http.Request) {
 		resp = citysortInfo()
 	case CityLoca:
 		resp = citylocaInfo()
+	case TransactionAmount:
+		resp = transactionAmountInfo()
 	}
 	returnJsonObj(resp, w)
 }
@@ -119,9 +127,21 @@ func citylocaInfo() interface{} {
 	return mapCitys
 }
 
+func transactionAmountInfo() interface{} {
+	conn := Pool.Get()
+	defer conn.Close()
+
+	resp, _ := conn.Do("GET", "UduckTA")
+	value, _ := strconv.ParseInt(string(resp.([]byte)), 10, 64)
+	tas := make([]*TA, 0, 5)
+	tas = append(tas, &TA{Name:"", Value:value})
+	return tas
+}
+
 func main() {
 	http.HandleFunc(CitySort, serveHTTP)
 	http.HandleFunc(CityLoca, serveHTTP)
+	http.HandleFunc(TransactionAmount, serveHTTP)
 	err := http.ListenAndServe(HttpAddr, nil)
 	if err != nil {
 		fmt.Printf("error: %v\n", err)
