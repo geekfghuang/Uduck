@@ -15,6 +15,7 @@ const (
 	CitySort = "/citysort"
 	CityLoca = "/cityloca"
 	TransactionAmount = "/transactionamount"
+	SexRatio = "/sexratio"
 )
 
 var Pool *redis.Pool
@@ -34,6 +35,11 @@ type MapCity struct {
 type TA struct {
 	Name string `json:"name"`
 	Value int64 `json:"value"`
+}
+
+type ManAndWoman struct {
+	X string `json:"x"`
+	Y int64 `json:"y"`
 }
 
 func init() {
@@ -71,6 +77,8 @@ func serveHTTP(w http.ResponseWriter, r *http.Request) {
 		resp = citylocaInfo()
 	case TransactionAmount:
 		resp = transactionAmountInfo()
+	case SexRatio:
+		resp = sexratio()
 	}
 	returnJsonObj(resp, w)
 }
@@ -138,10 +146,27 @@ func transactionAmountInfo() interface{} {
 	return tas
 }
 
+func sexratio() interface{} {
+	conn := Pool.Get()
+	defer conn.Close()
+
+	maw := make([]*ManAndWoman, 0, 5)
+	resp, _ := conn.Do("GET", "UduckMan")
+	value, _ := strconv.ParseInt(string(resp.([]byte)), 10, 64)
+	man := &ManAndWoman{X:"男", Y:value}
+	maw = append(maw, man)
+	resp, _ = conn.Do("GET", "UduckWoman")
+	value, _ = strconv.ParseInt(string(resp.([]byte)), 10, 64)
+	woman := &ManAndWoman{X:"女", Y:value}
+	maw = append(maw, woman)
+	return maw
+}
+
 func main() {
 	http.HandleFunc(CitySort, serveHTTP)
 	http.HandleFunc(CityLoca, serveHTTP)
 	http.HandleFunc(TransactionAmount, serveHTTP)
+	http.HandleFunc(SexRatio, serveHTTP)
 	err := http.ListenAndServe(HttpAddr, nil)
 	if err != nil {
 		fmt.Printf("error: %v\n", err)
