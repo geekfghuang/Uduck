@@ -18,17 +18,34 @@ object Calculator {
 
     // 获得日志数据
     val logs = messages.map(_._2)
-    // 取出ip
+
+    // 统计城市活跃度与城市地理位置
     val ips = logs.map(line => {
       line.split("\t")(1)
     })
-    // 统计城市活跃度与城市地理位置
     ips.foreachRDD(rdd => {
       rdd.foreachPartition(partitionRecords => {
         val transport = DataHandler.getTransport()
         val client = DataHandler.getClient(transport)
         partitionRecords.foreach(ip => {
-          client.citySortAndLoca(ip)
+          DataHandler.citySortAndLoca(client, ip)
+        })
+        DataHandler.destoryTransport(transport)
+      })
+    })
+
+    // 统计交易总金额
+    val payActionUrls = logs.map(line => {
+      line.split("\t")(3)
+    }).filter(allActionUrl => {
+      allActionUrl.substring(0, 4) == "/pay"
+    })
+    payActionUrls.foreachRDD(rdd => {
+      rdd.foreachPartition(partitionRecords => {
+        val transport = DataHandler.getTransport()
+        val client = DataHandler.getClient(transport)
+        partitionRecords.foreach(payActionUrl => {
+          DataHandler.payGoods(client, payActionUrl)
         })
         DataHandler.destoryTransport(transport)
       })

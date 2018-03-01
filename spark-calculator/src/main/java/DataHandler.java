@@ -31,6 +31,14 @@ public class DataHandler {
         }
     }
 
+    public static void payGoods(UduckSrv.Client client, String payActionUrl) {
+        try {
+            client.payGoods(payActionUrl.substring(payActionUrl.lastIndexOf("/") + 1));
+        } catch (TException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void destoryTransport(TTransport transport) {
         transport.close();
     }
