@@ -23,6 +23,7 @@ func Usage() {
   flag.PrintDefaults()
   fmt.Fprintln(os.Stderr, "\nFunctions:")
   fmt.Fprintln(os.Stderr, "  void citySortAndLoca(string ip)")
+  fmt.Fprintln(os.Stderr, "  void payGoods(string goodsId)")
   fmt.Fprintln(os.Stderr)
   os.Exit(0)
 }
@@ -128,6 +129,16 @@ func main() {
     argvalue0 := flag.Arg(1)
     value0 := argvalue0
     fmt.Print(client.CitySortAndLoca(context.Background(), value0))
+    fmt.Print("\n")
+    break
+  case "payGoods":
+    if flag.NArg() - 1 != 1 {
+      fmt.Fprintln(os.Stderr, "PayGoods requires 1 args")
+      flag.Usage()
+    }
+    argvalue0 := flag.Arg(1)
+    value0 := argvalue0
+    fmt.Print(client.PayGoods(context.Background(), value0))
     fmt.Print("\n")
     break
   case "":

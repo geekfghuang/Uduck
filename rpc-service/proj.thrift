@@ -3,4 +3,5 @@ namespace java rpc
 
 service UduckSrv {
     void citySortAndLoca(1: string ip)
+    void payGoods(1: string goodsId)
 }

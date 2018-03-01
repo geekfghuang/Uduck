@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"encoding/json"
+	"strconv"
 )
 
 const (
@@ -77,6 +78,16 @@ func (this *UduckSrvImpl) CitySortAndLoca(ctx context.Context, ip string) (err e
 	city, lng, lat := parseIP(ip)
 	conn.Do("ZADD", "UduckIp", "INCR", 1, city)
 	conn.Do("GEOADD", "UduckPoint", lng, lat, city)
+	return nil
+}
+
+func (this *UduckSrvImpl) PayGoods(ctx context.Context, goodsId string) (err error) {
+	conn := Pool.Get()
+	defer conn.Close()
+
+	resp, _ := conn.Do("GET", "UduckGP" + goodsId)
+	price, _ := strconv.ParseInt(string(resp.([]byte)), 10, 64)
+	conn.Do("INCRBY", "UduckTA", price)
 	return nil
 }
 
