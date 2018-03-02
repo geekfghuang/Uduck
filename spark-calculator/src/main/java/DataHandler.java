@@ -47,6 +47,14 @@ public class DataHandler {
         }
     }
 
+    public static void searchHot(UduckSrv.Client client, String searchActionUrl) {
+        try {
+            client.searchHot(searchActionUrl.substring(searchActionUrl.lastIndexOf("=") + 1));
+        } catch (TException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void destoryTransport(TTransport transport) {
         transport.close();
     }

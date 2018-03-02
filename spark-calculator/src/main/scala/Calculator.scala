@@ -66,6 +66,23 @@ object Calculator {
       })
     })
 
+    // 统计搜索热词
+    val searchActionUrls = logs.map(line => {
+      line.split("\t")(3)
+    }).filter(searchActionUrl => {
+      searchActionUrl.substring(0, 4) == "/sea"
+    })
+    searchActionUrls.foreachRDD(rdd => {
+      rdd.foreachPartition(partitionRecords => {
+        val transport = DataHandler.getTransport()
+        val client = DataHandler.getClient(transport)
+        partitionRecords.foreach(searchActionUrl => {
+          DataHandler.searchHot(client, searchActionUrl)
+        })
+        DataHandler.destoryTransport(transport)
+      })
+    })
+
     ssc.start()
     ssc.awaitTermination()
   }
