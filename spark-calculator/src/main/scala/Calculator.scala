@@ -2,6 +2,10 @@ import org.apache.spark.SparkConf
 import org.apache.spark.streaming.kafka.KafkaUtils
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 
+/**
+  * 作业启动命令：
+  * ./spark-submit --master local[5] --class Calculator --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.2.0 ../test-lib/spark-calculator-1.0-SNAPSHOT.jar localhost:2181 geekfghuang Uduck1688 1
+  */
 object Calculator {
   def main(args: Array[String]): Unit = {
     if (args.length != 4) {
@@ -10,7 +14,7 @@ object Calculator {
     }
 
     val Array(zk, groupId, topics, numThreads) = args
-    val sparkConf = new SparkConf().setAppName("Calculator").setMaster("local[5]")
+    val sparkConf = new SparkConf().setAppName("Calculator")//.setMaster("local[5]")
     val ssc = new StreamingContext(sparkConf, Seconds(30))
 
     val topicsMap = topics.split(",").map((_, numThreads.toInt)).toMap
