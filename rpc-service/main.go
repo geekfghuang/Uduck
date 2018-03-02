@@ -105,6 +105,14 @@ func (this *UduckSrvImpl) UserSex(ctx context.Context, userId string) (err error
 	return nil
 }
 
+func (this *UduckSrvImpl) SearchHot(ctx context.Context, word string) (err error) {
+	conn := Pool.Get()
+	defer conn.Close()
+
+	conn.Do("ZADD", "UduckSH", "INCR", 1, word)
+	return nil
+}
+
 func parseIP(ip string) (city, lng, lat string) {
 	resp, err := http.Get(MapApi + ip)
 	parseIPCheckErr(err)

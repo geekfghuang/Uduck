@@ -28,6 +28,9 @@ type UduckSrv interface {
   // Parameters:
   //  - UserId
   UserSex(ctx context.Context, userId string) (err error)
+  // Parameters:
+  //  - Word
+  SearchHot(ctx context.Context, word string) (err error)
 }
 
 type UduckSrvClient struct {
@@ -90,6 +93,18 @@ func (p *UduckSrvClient) UserSex(ctx context.Context, userId string) (err error)
   return nil
 }
 
+// Parameters:
+//  - Word
+func (p *UduckSrvClient) SearchHot(ctx context.Context, word string) (err error) {
+  var _args6 UduckSrvSearchHotArgs
+  _args6.Word = word
+  var _result7 UduckSrvSearchHotResult
+  if err = p.c.Call(ctx, "searchHot", &_args6, &_result7); err != nil {
+    return
+  }
+  return nil
+}
+
 type UduckSrvProcessor struct {
   processorMap map[string]thrift.TProcessorFunction
   handler UduckSrv
@@ -110,11 +125,12 @@ func (p *UduckSrvProcessor) ProcessorMap() map[string]thrift.TProcessorFunction 
 
 func NewUduckSrvProcessor(handler UduckSrv) *UduckSrvProcessor {
 
-  self6 := &UduckSrvProcessor{handler:handler, processorMap:make(map[string]thrift.TProcessorFunction)}
-  self6.processorMap["citySortAndLoca"] = &uduckSrvProcessorCitySortAndLoca{handler:handler}
-  self6.processorMap["payGoods"] = &uduckSrvProcessorPayGoods{handler:handler}
-  self6.processorMap["userSex"] = &uduckSrvProcessorUserSex{handler:handler}
-return self6
+  self8 := &UduckSrvProcessor{handler:handler, processorMap:make(map[string]thrift.TProcessorFunction)}
+  self8.processorMap["citySortAndLoca"] = &uduckSrvProcessorCitySortAndLoca{handler:handler}
+  self8.processorMap["payGoods"] = &uduckSrvProcessorPayGoods{handler:handler}
+  self8.processorMap["userSex"] = &uduckSrvProcessorUserSex{handler:handler}
+  self8.processorMap["searchHot"] = &uduckSrvProcessorSearchHot{handler:handler}
+return self8
 }
 
 func (p *UduckSrvProcessor) Process(ctx context.Context, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
@@ -125,12 +141,12 @@ func (p *UduckSrvProcessor) Process(ctx context.Context, iprot, oprot thrift.TPr
   }
   iprot.Skip(thrift.STRUCT)
   iprot.ReadMessageEnd()
-  x7 := thrift.NewTApplicationException(thrift.UNKNOWN_METHOD, "Unknown function " + name)
+  x9 := thrift.NewTApplicationException(thrift.UNKNOWN_METHOD, "Unknown function " + name)
   oprot.WriteMessageBegin(name, thrift.EXCEPTION, seqId)
-  x7.Write(oprot)
+  x9.Write(oprot)
   oprot.WriteMessageEnd()
   oprot.Flush()
-  return false, x7
+  return false, x9
 
 }
 
@@ -252,6 +268,51 @@ func (p *uduckSrvProcessorUserSex) Process(ctx context.Context, seqId int32, ipr
     return true, err2
   }
   if err2 = oprot.WriteMessageBegin("userSex", thrift.REPLY, seqId); err2 != nil {
+    err = err2
+  }
+  if err2 = result.Write(oprot); err == nil && err2 != nil {
+    err = err2
+  }
+  if err2 = oprot.WriteMessageEnd(); err == nil && err2 != nil {
+    err = err2
+  }
+  if err2 = oprot.Flush(); err == nil && err2 != nil {
+    err = err2
+  }
+  if err != nil {
+    return
+  }
+  return true, err
+}
+
+type uduckSrvProcessorSearchHot struct {
+  handler UduckSrv
+}
+
+func (p *uduckSrvProcessorSearchHot) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+  args := UduckSrvSearchHotArgs{}
+  if err = args.Read(iprot); err != nil {
+    iprot.ReadMessageEnd()
+    x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
+    oprot.WriteMessageBegin("searchHot", thrift.EXCEPTION, seqId)
+    x.Write(oprot)
+    oprot.WriteMessageEnd()
+    oprot.Flush()
+    return false, err
+  }
+
+  iprot.ReadMessageEnd()
+  result := UduckSrvSearchHotResult{}
+  var err2 error
+  if err2 = p.handler.SearchHot(ctx, args.Word); err2 != nil {
+    x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing searchHot: " + err2.Error())
+    oprot.WriteMessageBegin("searchHot", thrift.EXCEPTION, seqId)
+    x.Write(oprot)
+    oprot.WriteMessageEnd()
+    oprot.Flush()
+    return true, err2
+  }
+  if err2 = oprot.WriteMessageBegin("searchHot", thrift.REPLY, seqId); err2 != nil {
     err = err2
   }
   if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -696,6 +757,148 @@ func (p *UduckSrvUserSexResult) String() string {
     return "<nil>"
   }
   return fmt.Sprintf("UduckSrvUserSexResult(%+v)", *p)
+}
+
+// Attributes:
+//  - Word
+type UduckSrvSearchHotArgs struct {
+  Word string `thrift:"word,1" db:"word" json:"word"`
+}
+
+func NewUduckSrvSearchHotArgs() *UduckSrvSearchHotArgs {
+  return &UduckSrvSearchHotArgs{}
+}
+
+
+func (p *UduckSrvSearchHotArgs) GetWord() string {
+  return p.Word
+}
+func (p *UduckSrvSearchHotArgs) Read(iprot thrift.TProtocol) error {
+  if _, err := iprot.ReadStructBegin(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
+  }
+
+
+  for {
+    _, fieldTypeId, fieldId, err := iprot.ReadFieldBegin()
+    if err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T field %d read error: ", p, fieldId), err)
+    }
+    if fieldTypeId == thrift.STOP { break; }
+    switch fieldId {
+    case 1:
+      if fieldTypeId == thrift.STRING {
+        if err := p.ReadField1(iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(fieldTypeId); err != nil {
+          return err
+        }
+      }
+    default:
+      if err := iprot.Skip(fieldTypeId); err != nil {
+        return err
+      }
+    }
+    if err := iprot.ReadFieldEnd(); err != nil {
+      return err
+    }
+  }
+  if err := iprot.ReadStructEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+  }
+  return nil
+}
+
+func (p *UduckSrvSearchHotArgs)  ReadField1(iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadString(); err != nil {
+  return thrift.PrependError("error reading field 1: ", err)
+} else {
+  p.Word = v
+}
+  return nil
+}
+
+func (p *UduckSrvSearchHotArgs) Write(oprot thrift.TProtocol) error {
+  if err := oprot.WriteStructBegin("searchHot_args"); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
+  if p != nil {
+    if err := p.writeField1(oprot); err != nil { return err }
+  }
+  if err := oprot.WriteFieldStop(); err != nil {
+    return thrift.PrependError("write field stop error: ", err) }
+  if err := oprot.WriteStructEnd(); err != nil {
+    return thrift.PrependError("write struct stop error: ", err) }
+  return nil
+}
+
+func (p *UduckSrvSearchHotArgs) writeField1(oprot thrift.TProtocol) (err error) {
+  if err := oprot.WriteFieldBegin("word", thrift.STRING, 1); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:word: ", p), err) }
+  if err := oprot.WriteString(string(p.Word)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.word (1) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:word: ", p), err) }
+  return err
+}
+
+func (p *UduckSrvSearchHotArgs) String() string {
+  if p == nil {
+    return "<nil>"
+  }
+  return fmt.Sprintf("UduckSrvSearchHotArgs(%+v)", *p)
+}
+
+type UduckSrvSearchHotResult struct {
+}
+
+func NewUduckSrvSearchHotResult() *UduckSrvSearchHotResult {
+  return &UduckSrvSearchHotResult{}
+}
+
+func (p *UduckSrvSearchHotResult) Read(iprot thrift.TProtocol) error {
+  if _, err := iprot.ReadStructBegin(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
+  }
+
+
+  for {
+    _, fieldTypeId, fieldId, err := iprot.ReadFieldBegin()
+    if err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T field %d read error: ", p, fieldId), err)
+    }
+    if fieldTypeId == thrift.STOP { break; }
+    if err := iprot.Skip(fieldTypeId); err != nil {
+      return err
+    }
+    if err := iprot.ReadFieldEnd(); err != nil {
+      return err
+    }
+  }
+  if err := iprot.ReadStructEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+  }
+  return nil
+}
+
+func (p *UduckSrvSearchHotResult) Write(oprot thrift.TProtocol) error {
+  if err := oprot.WriteStructBegin("searchHot_result"); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
+  if p != nil {
+  }
+  if err := oprot.WriteFieldStop(); err != nil {
+    return thrift.PrependError("write field stop error: ", err) }
+  if err := oprot.WriteStructEnd(); err != nil {
+    return thrift.PrependError("write struct stop error: ", err) }
+  return nil
+}
+
+func (p *UduckSrvSearchHotResult) String() string {
+  if p == nil {
+    return "<nil>"
+  }
+  return fmt.Sprintf("UduckSrvSearchHotResult(%+v)", *p)
 }
 
 

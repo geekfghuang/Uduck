@@ -25,6 +25,7 @@ func Usage() {
   fmt.Fprintln(os.Stderr, "  void citySortAndLoca(string ip)")
   fmt.Fprintln(os.Stderr, "  void payGoods(string goodsId)")
   fmt.Fprintln(os.Stderr, "  void userSex(string userId)")
+  fmt.Fprintln(os.Stderr, "  void searchHot(string word)")
   fmt.Fprintln(os.Stderr)
   os.Exit(0)
 }
@@ -150,6 +151,16 @@ func main() {
     argvalue0 := flag.Arg(1)
     value0 := argvalue0
     fmt.Print(client.UserSex(context.Background(), value0))
+    fmt.Print("\n")
+    break
+  case "searchHot":
+    if flag.NArg() - 1 != 1 {
+      fmt.Fprintln(os.Stderr, "SearchHot requires 1 args")
+      flag.Usage()
+    }
+    argvalue0 := flag.Arg(1)
+    value0 := argvalue0
+    fmt.Print(client.SearchHot(context.Background(), value0))
     fmt.Print("\n")
     break
   case "":
