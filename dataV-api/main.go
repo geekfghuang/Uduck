@@ -16,6 +16,7 @@ const (
 	CityLoca = "/cityloca"
 	TransactionAmount = "/transactionamount"
 	SexRatio = "/sexratio"
+	SearchHot = "/searchhot"
 )
 
 var Pool *redis.Pool
@@ -40,6 +41,11 @@ type TA struct {
 type ManAndWoman struct {
 	X string `json:"x"`
 	Y int64 `json:"y"`
+}
+
+type HotWord struct {
+	X string `json:"x"`
+	Y string `json:"y"`
 }
 
 func init() {
@@ -78,7 +84,9 @@ func serveHTTP(w http.ResponseWriter, r *http.Request) {
 	case TransactionAmount:
 		resp = transactionAmountInfo()
 	case SexRatio:
-		resp = sexratio()
+		resp = sexRatio()
+	case SearchHot:
+		resp = searchHot()
 	}
 	returnJsonObj(resp, w)
 }
@@ -146,7 +154,7 @@ func transactionAmountInfo() interface{} {
 	return tas
 }
 
-func sexratio() interface{} {
+func sexRatio() interface{} {
 	conn := Pool.Get()
 	defer conn.Close()
 
@@ -162,11 +170,30 @@ func sexratio() interface{} {
 	return maw
 }
 
+func searchHot() interface{} {
+	conn := Pool.Get()
+	defer conn.Close()
+
+	resp, err := conn.Do("ZREVRANGE", "UduckSH", 0, 6, "WITHSCORES")
+	if err != nil {
+		fmt.Printf("error: %v\n", err)
+	}
+	infos := resp.([]interface{})
+	hotwords := make([]*HotWord, 0, 10)
+	for i := 0; i < len(infos); i+=2 {
+		x := infos[i].([]byte)
+		y := infos[i+1].([]byte)
+		hotwords = append(hotwords, &HotWord{X:string(x), Y:string(y)})
+	}
+	return hotwords
+}
+
 func main() {
 	http.HandleFunc(CitySort, serveHTTP)
 	http.HandleFunc(CityLoca, serveHTTP)
 	http.HandleFunc(TransactionAmount, serveHTTP)
 	http.HandleFunc(SexRatio, serveHTTP)
+	http.HandleFunc(SearchHot, serveHTTP)
 	err := http.ListenAndServe(HttpAddr, nil)
 	if err != nil {
 		fmt.Printf("error: %v\n", err)
